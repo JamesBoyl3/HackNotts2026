@@ -1,0 +1,1 @@
+//This component should have the icons that sit on the desktop and allow the user to click them to open the corresponding app window. The icons should be draggable and resizable. The desktop should also have a background image that can be changed by the user.

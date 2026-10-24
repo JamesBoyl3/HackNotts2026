@@ -1,1 +1,1 @@
-// hello
+// This will have the front end for a microsoft messenger style app. Might be looks only and not functional to focus functionality for the email app. The messenger app will have a list of contacts on the left and a chat window on the right. The chat window will have a list of messages and a text input for sending messages. The messenger app will also have a settings button that will open a settings window. The settings window will have options for changing the theme and other settings.
