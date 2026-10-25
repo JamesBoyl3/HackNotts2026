@@ -1,40 +1,46 @@
-# Y2K OS frontend
+# Y2K OS
 
-Y2K OS is a React + TypeScript + Vite desktop interface for the hedge-fund simulation. It runs independently with frontend-owned mock data; the Python game engine and AI service are not connected by this project.
+Y2K OS is a Windows 98-inspired desktop for a playable Nottingham hedge-fund simulation. The production game runs entirely in the React/TypeScript frontend; the historical Python and standalone React projects remain useful references but are not gameplay dependencies.
 
-## Run locally
+## Run
 
 From the repository root:
 
 ```bash
-npm --prefix y2k-os install
-npm --prefix y2k-os run dev
+npm install --prefix y2k-os
+npm run dev
 ```
 
-The production checks are:
+Checks:
 
 ```bash
-npm --prefix y2k-os run build
-npm --prefix y2k-os run lint
+npm run build
+npm run lint
 ```
+
+Open the Vite URL and launch **Market Terminal**. The normal session clock runs from 09:00 to 16:30 over eight real minutes; the compact session timer is shown in the desktop header. Market weeks are advanced explicitly from the terminal and are not automatically advanced by the clock.
 
 ## Architecture
 
-- `src/main.tsx` is the React bootstrap only.
-- `src/App.tsx` composes the desktop, window manager behavior, application registry, and state hooks.
-- `src/components/` contains reusable desktop primitives: the desktop surface, taskbar/Start menu, and window shell.
-- `src/apps/` contains the application UIs: Market Terminal, email, browser, Messenger, and File Explorer.
-- `src/domain/` contains shared TypeScript models and curated mock fixtures.
-- `src/services/` contains frontend-only mock operations, including order validation, portfolio calculations, session progression, and simulated file opening.
-- `src/state/useGameState.ts` owns mock game state. Desktop/window state remains local to `App`, so presentation state is not mixed with simulated financial state.
-- `src/styles/` contains shared design tokens. Application and shell styles remain in `src/App.css` to preserve the existing visual design during this incremental refactor.
+- `src/game/gameEngine.ts` is the sole source of truth for cash, positions, prices, history, events, LP confidence, crash timing, orders, week progression, game-over, and final performance.
+- `src/state/useGameState.ts` is the React adapter. It persists validated-in-practice game snapshots in versioned-key local storage and exposes engine actions to applications.
+- `src/apps/terminal/MarketTerminal.tsx` renders the shared engine state and never calculates prices or trade rules. The previous placeholder is preserved in `MarketTerminalBackup.tsx`.
+- `src/services/aiContent.ts` calls the local OpenAI-compatible model at `http://127.0.0.1:8889/v1/chat/completions`, validates concise JSON news, applies a timeout, and falls back to deterministic week-specific copy. The game remains playable when the model is offline.
+- `src/apps/email/email.tsx` retains the existing Outlook Express fixtures and receives a week bulletin fallback as new weeks open.
+- `src/apps/browser/browser.tsx` provides Nottingham Financial, Penguin Palace, eBay, and YouTube-style internal pages. No simulated page makes external requests.
 
-The application registry in `src/app/applicationRegistry.ts` is the single source for application IDs, titles, icons, and default window sizes. It is used by the desktop launcher and window creation logic.
+The migrated rules match `marketsimreact/marketsimreact.jsx`: $1.2M initial cash, HCKSOC/CAPONE/TELLUV starting holdings, $35K overhead, reassurance for $150K, a random crash in weeks 11–14, deterministic events in weeks 5/9/17, and a 24-week target of $7.5M.
 
-## Simulation boundary
+## Local AI
 
-The market, game progression, email, Messenger, browser pages, and file system are simulated locally. Orders and session advancement are not authoritative game-engine operations. The extracted service functions are frontend-facing seams that can later be replaced by adapters supplied by the team without requiring the application UIs to be rewritten.
+Start any local OpenAI-compatible chat server on port `8889`, for example one configured to expose:
 
-## Assets
+```text
+http://127.0.0.1:8889/v1/chat/completions
+```
 
-Source assets are imported through Vite from `src/assets/`, including the default wallpaper in `src/assets/wallpapers/desktop-image.jpg`. This keeps development and production asset URLs consistent.
+No cloud key or frontend secret is required. Responses must contain JSON fields `headline`, `summary`, `body`, `publishedAt`, and `relatedTickers`; invalid, slow, or unavailable responses use the local fallback article. AI prose can never mutate gameplay state.
+
+## Reset and known limitations
+
+Use **Start > Restart mock session** or the terminal’s new-game control to clear the stored game. Generated narrative is cached for the current React session and fallback email copy is retained across week changes. The local model server is optional. Browser mock pages are intentionally lightweight set dressing, and engine unit-test infrastructure is not yet added; the engine is isolated into pure functions to make that next step straightforward.

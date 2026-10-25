@@ -5,5 +5,5 @@ export function StartMenu({ onOpen, onWallpaper, onRestart }: { onOpen: (id: App
 }
 
 export default function Taskbar({ windows, onToggleStart, onWindow, clock }: { windows: WindowState[]; onToggleStart: () => void; onWindow: (id: AppId) => void; clock: string }) {
-  return <footer className="taskbar"><button className="start-button" onClick={onToggleStart}><span className="windows-mark">▦</span> Start</button>{windows.map(window => <button key={window.id} className={`task-button ${window.minimized ? "" : "active"}`} onClick={() => onWindow(window.id)}>▣ {window.title}</button>)}<div className="tray"><span className="mock-badge">MOCK ENGINE</span><span>🔊</span><time>{clock}</time></div></footer>;
+  return <footer className="taskbar"><button className="start-button" onClick={onToggleStart}><span className="windows-mark">Y2K</span> Start</button>{windows.map(window => <button key={window.id} className={`task-button ${window.minimized ? "" : "active"}`} onClick={() => onWindow(window.id)}>▣ {window.title}</button>)}<div className="tray"><span className="mock-badge">TRADING CLOCK</span><span>🔊</span><time>{clock}</time></div></footer>;
 }

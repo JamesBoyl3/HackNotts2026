@@ -1,24 +1,34 @@
-import { useState } from "react";
-import { initialContacts, initialMail, sessionDates, stocks } from "../domain/mockData";
-import type { Chat, Contacts, Mail, OrderSide, Position } from "../domain/types";
-import { advanceMockSession, createMockSession } from "../services/mockGame";
-import { calculatePortfolioValue, placeMockOrder } from "../services/mockMarket";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { initialContacts, initialMail } from "../domain/mockData";
+import type { Chat, Contacts, Mail } from "../domain/types";
+import { createGame, executeOrder, advanceWeek, reassureLps, restartGame, nav, holdingsValue, type GameState, type OrderSide, type Ticker } from "../game/gameEngine";
+import { fallbackMail, fallbackNews, generateNews, type GeneratedNews } from "../services/aiContent";
+
+const STORAGE_KEY = "y2k-os-game-v2";
+const load = (): GameState => { try { const saved = localStorage.getItem(STORAGE_KEY); if (!saved) return createGame(); const value = JSON.parse(saved) as Partial<GameState>; if (typeof value.sessionId !== "string" || typeof value.week !== "number" || typeof value.cash !== "number" || !value.positions || !value.quotes || !value.history) return createGame(); return value as GameState; } catch { return createGame(); } };
 
 export function useGameState() {
-  const [cash, setCash] = useState(100000);
-  const [positions, setPositions] = useState<Position[]>([{ symbol: "NOVA", shares: 120, average: 68.2 }, { symbol: "GRN", shares: 300, average: 35.1 }]);
-  const [session, setSession] = useState(createMockSession());
-  const [lastOrder, setLastOrder] = useState("Ready for orders. Prices are simulated locally.");
+  const [state, setState] = useState<GameState>(load);
   const [mails, setMails] = useState<Mail[]>(initialMail);
   const [contacts, setContacts] = useState<Contacts>(initialContacts);
-  const portfolioValue = calculatePortfolioValue(positions, stocks);
-  const placeOrder = (symbol: string, side: OrderSide, amount: number) => {
-    const result = placeMockOrder(positions, cash, stocks, symbol, side, amount);
-    setPositions(result.positions); setCash(result.cash); setLastOrder(result.result.message);
-  };
-  const advance = () => { const next = advanceMockSession(session); setSession(next); setLastOrder(next.dateIndex === sessionDates.length - 1 ? "The crash window has arrived. Consider exiting and lock in your result." : "New Monday session loaded. Market prices have moved."); };
-  const markMailRead = (index: number) => setMails(value => value.map((mail, itemIndex) => itemIndex === index ? { ...mail, unread: false } : mail));
+  const [news, setNews] = useState<GeneratedNews[]>([]);
+  useEffect(() => { if (state.week > 1 && !mails.some(mail => mail.id === 1000 + state.week)) setMails(value => [fallbackMail(state), ...value]); }, [state, mails]);
+  useEffect(() => {
+    if (news.some(item => item.week === state.week)) return;
+    const controller = new AbortController(); const timeout = window.setTimeout(() => controller.abort(), 4500);
+    void generateNews(state, controller.signal).then(item => setNews(value => [...value.filter(existing => existing.week !== state.week), item ?? fallbackNews(state)])).catch(() => setNews(value => [...value, fallbackNews(state)]));
+    return () => { window.clearTimeout(timeout); controller.abort(); };
+  }, [state.week, state.sessionId]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }, [state]);
+  const update = useCallback((next: GameState) => setState(next), []);
+  const placeOrder = useCallback((symbol: string, side: OrderSide, amount: number) => update(executeOrder(state, symbol, side, amount)), [state, update]);
+  const advance = useCallback(() => update(advanceWeek(state)), [state, update]);
+  const reassure = useCallback(() => update(reassureLps(state)), [state, update]);
+  const markMailRead = (index: number) => setMails(value => value.map((mail, item) => item === index ? { ...mail, unread: false } : mail));
   const sendMessage = (contact: string, text: string) => setContacts(value => ({ ...value, [contact]: { ...value[contact], chat: [...value[contact].chat, { from: "me", text, time: "now" } as Chat] } }));
-  const restart = () => { setCash(100000); setPositions([{ symbol: "NOVA", shares: 120, average: 68.2 }, { symbol: "GRN", shares: 300, average: 35.1 }]); setSession(createMockSession()); setLastOrder("Ready for orders. Prices are simulated locally."); setMails(initialMail); setContacts(initialContacts); };
-  return { cash, positions, portfolioValue, totalValue: cash + portfolioValue, session, lastOrder, mails, contacts, placeOrder, advance, markMailRead, sendMessage, restart };
+  const restart = () => { localStorage.removeItem(STORAGE_KEY); setState(restartGame()); setMails(initialMail); setNews([]); setContacts(initialContacts); };
+  return useMemo(() => ({ ...state, positions: Object.values(state.positions), totalValue: nav(state), portfolioValue: holdingsValue(state), session: { date: `Week ${state.week} · 1999`, phase: state.phase === "crashed" ? "crash-window" : "active" as const }, mails, news, contacts, placeOrder, advance, reassure, markMailRead, sendMessage, restart }), [state, mails, news, contacts, placeOrder, advance, reassure]);
 }
+
+export type GameHook = ReturnType<typeof useGameState>;
+export type { Ticker };
