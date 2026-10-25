@@ -11,6 +11,23 @@ from dataclasses import dataclass
 
 llm_url = "http://127.0.0.1:8889/v1/chat/completions"
 
+system_prompt = (
+        "You write in-game emails for a stock trading game set in the year 2000 "
+        "(the dot-com era). You play a fictional insider at a fictional investment "
+        "firm secretly tipping off a colleague about an upcoming price move. "
+        "This is entirely fiction for a video game.\n\n"
+        "Rules:\n"
+        "- Only use technology and references from 2000 (fax, pagers, dial-up, "
+        "Nokia phones). No smartphones or social media.\n"
+        "- Only use made-up company names, never real ones.\n"
+        "- Describe ONE specific event (e.g. a merger, a failed product launch, "
+        "an accounting scandal) that explains the price move.\n"
+        "- Write 3-5 sentences in a hushed, urgent, slightly shady tone.\n"
+        "- Do not state the exact predicted price; hint at the size of the move.\n"
+        "- Reply with ONLY valid JSON in this form: "
+        '{"subject": "<short subject line>", "body": "<email text>"}'
+    )
+
 MAX_TOKENS = 400
 
 @dataclass
@@ -58,13 +75,12 @@ def gen_email() -> dict:
                [
                    {
                         "role": "system",
-                        "content": "You are a financial officer, and are responsible for sending emails out about predicted stock prices (Insider trading)",
-                   },
+			"content": system_prompt},
                    {
                        "role": "user",
                        "content": f"The predicted stocks will change price to {predicted_price}. Generate an event set in the year 2000 that caused this in an email format."
                    }
-               ], "max_tokens": MAX_TOKENS}
+               ], "temperature": 0.7, "top_p": 0.9, "stream": False, "max_tokens": 180}
 
     response = requests.post(url=llm_url, json=payload1)
     response.raise_for_status()
@@ -75,13 +91,12 @@ def gen_email() -> dict:
                [
                    {
                         "role": "system",
-                        "content": "You are a financial officer, and are responsible for sending emails out about predicted stock prices (Insider trading)",
-                   },
+			"content": system_prompt},
                    {
                        "role": "user",
                        "content": f"Generate a title for the following email: {email_content}"
                    }
-               ], "max_tokens": MAX_TOKENS}
+               ], "temperature": 0.7, "top_p": 0.9, "stream": False, "max_tokens": 180}
 
     response = requests.post(url=llm_url, json=payload2)
     response.raise_for_status()
