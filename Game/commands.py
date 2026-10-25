@@ -7,7 +7,14 @@ import requests
 
 from marketsimulator import DotcomHedgeFund
 
+from dataclasses import dataclass
+
 llm_url = "http://127.0.0.1:8889/v1/chat/completions"
+
+@dataclass
+class OrderRequest:
+    stock: str
+    amnt: int
 
 @asynccontextmanager
 def lifespan() -> Generator:
@@ -19,20 +26,24 @@ def lifespan() -> Generator:
 app = FastAPI(title="OSGame", lifespan=lifespan)
 
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
+def root() -> dict:
+    return {"status": "active"}
 
-@app.get("/stocks") 
-def display_stocks() -> None: 
-    return
+@app.get("/advance")
+def advance_market() -> None:
+    market_sim.advance_market()
 
 @app.post("/invest")
-def invest_stock() -> None: 
-    ...
+def invest_stock(request: OrderRequest) -> None: 
+    market_sim.buy_stock(request.stock, request.amnt)
 
-app.post("/sell")
-def sell_stock() -> None: 
-    ...
+@app.post("/sell")
+def sell_stock(request: OrderRequest) -> None: 
+    market_sim.sell_stock(request.stock, request.amnt)
+
+@app.get("/portfolio")
+def get_portfolio() -> dict:
+    return {"portfolio": market_sim.get_portfolio_value()}
 
 @app.get("/email")
 def gen_email() -> dict: 
