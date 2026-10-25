@@ -13,6 +13,13 @@ class DotcomHedgeFund:
             "CAPONE": {"shares": 20_000, "price": 85.0},
             "TELUV": {"shares": 40_000, "price": 25.0},
         }
+
+        self._price_prediction = {
+            "HCKSOC": {"price": 42.0},
+            "CAPONE": {"price": 85.0},
+            "TELUV": {"price": 25.0},
+        }
+
         self.crash_triggered = False
         self.fished = False
         self.email_recieved = False
@@ -36,7 +43,12 @@ class DotcomHedgeFund:
 
     def advance_market(self):
         self.week += 1
-        
+
+        for key, val in self._price_prediction.items():
+            self.portfolio[key]["price"] = val
+
+        self._predict_market()
+
         if self.week >= 16 and not self.crash_triggered:
             self.crash_triggered = True
             print("\n>>> BREAKING: FED CHAIR WARNS OF 'IRRATIONAL EXUBERANCE'. TECH STOCKS FREEZE.")
@@ -109,6 +121,28 @@ class DotcomHedgeFund:
             print("STATUS: Survivor. You sidestepped the wreckage and captured market share.")
         else:
             print("STATUS: Barely solvent. The fund survived, but your reputation is decimated.")
+
+    def get_predicted_price(self) -> dict:
+        return self._price_prediction
+
+    def _predict_market(self) -> None:
+        if self.week >= 16 and random.random() < 0.25: #Market Crashes
+            for key in self.portfolio.keys():
+                self._predict_market[key]["price"] *= random.random(0.7, 0.8)
+        else:
+            for key in self.portfolio.keys():
+                self.portfolio[key]["price"] *= random.random(0.75, 1.5)
+    
+    def predict_crash(self) -> dict:
+        hcksoc_delta = random.uniform(-0.15, 0.35) if not self.crash_triggered else random.uniform(-0.40, 0.05)
+        capone_delta = random.uniform(-0.10, 0.25) if not self.crash_triggered else random.uniform(-0.35, 0.02)
+        teluv_delta = random.uniform(-0.02, 0.03)
+
+        self._next_portfolio["HCKSOC"]["price"] = max(0.50, self.portfolio["HCKSOC"]["price"] * (1 + hcksoc_delta))
+        self._next_portfolio["CAPONE"]["price"] = max(1.00, self.portfolio["CAPONE"]["price"] * (1 + capone_delta))
+        self._next_portfolio["TELUV"]["price"] = max(5.00, self.portfolio["TELUV"]["price"] * (1 + teluv_delta))
+
+        return self.portfolio
 
 if __name__ == "__main__":
     game = DotcomHedgeFund()
