@@ -1,1 +1,2 @@
-//This component should take the information generated from the python game engine and display it as the email "app" window.
+import EmailApp from "../apps/email/email";
+export default EmailApp;

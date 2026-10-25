@@ -1,4 +1,4 @@
-:root { --blue:#285bd8; --navy:#142863; --orange:#ec722e; --green:#7dc343; --grey:#bfbfbf; --pale:#d2e4fa; }
+@import "./styles/tokens.css";
 .desktop { position: relative; width:100vw; height:100vh; background-size:cover; background-position:center; overflow:hidden; }
 .desktop-shade { position:absolute; inset:0; background:linear-gradient(120deg,rgba(18,31,100,.2),rgba(0,0,0,0) 55%); pointer-events:none; }
 .desktop-icons { position:absolute; top:18px; left:18px; display:flex; flex-direction:column; gap:14px; z-index:1; }

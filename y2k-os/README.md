@@ -1,32 +1,40 @@
-# React + TypeScript + Vite
+# Y2K OS frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Y2K OS is a React + TypeScript + Vite desktop interface for the hedge-fund simulation. It runs independently with frontend-owned mock data; the Python game engine and AI service are not connected by this project.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+From the repository root:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm --prefix y2k-os install
+npm --prefix y2k-os run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The production checks are:
+
+```bash
+npm --prefix y2k-os run build
+npm --prefix y2k-os run lint
+```
+
+## Architecture
+
+- `src/main.tsx` is the React bootstrap only.
+- `src/App.tsx` composes the desktop, window manager behavior, application registry, and state hooks.
+- `src/components/` contains reusable desktop primitives: the desktop surface, taskbar/Start menu, and window shell.
+- `src/apps/` contains the application UIs: Market Terminal, email, browser, Messenger, and File Explorer.
+- `src/domain/` contains shared TypeScript models and curated mock fixtures.
+- `src/services/` contains frontend-only mock operations, including order validation, portfolio calculations, session progression, and simulated file opening.
+- `src/state/useGameState.ts` owns mock game state. Desktop/window state remains local to `App`, so presentation state is not mixed with simulated financial state.
+- `src/styles/` contains shared design tokens. Application and shell styles remain in `src/App.css` to preserve the existing visual design during this incremental refactor.
+
+The application registry in `src/app/applicationRegistry.ts` is the single source for application IDs, titles, icons, and default window sizes. It is used by the desktop launcher and window creation logic.
+
+## Simulation boundary
+
+The market, game progression, email, Messenger, browser pages, and file system are simulated locally. Orders and session advancement are not authoritative game-engine operations. The extracted service functions are frontend-facing seams that can later be replaced by adapters supplied by the team without requiring the application UIs to be rewritten.
+
+## Assets
+
+Source assets are imported through Vite from `src/assets/`, including the default wallpaper in `src/assets/wallpapers/desktop-image.jpg`. This keeps development and production asset URLs consistent.
