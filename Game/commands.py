@@ -17,11 +17,13 @@ class OrderRequest:
     amnt: int
 
 @asynccontextmanager
-def lifespan() -> Generator:
+async def lifespan(app: FastAPI):
     global market_sim
 
     market_sim = DotcomHedgeFund()
     yield
+
+    del market_sim
 
 app = FastAPI(title="OSGame", lifespan=lifespan)
 
