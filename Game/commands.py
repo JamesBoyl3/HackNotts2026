@@ -28,8 +28,6 @@ system_prompt = (
         '{"subject": "<short subject line>", "body": "<email text>"}'
     )
 
-MAX_TOKENS = 400
-
 @dataclass
 class OrderRequest:
     stock: str
@@ -80,7 +78,7 @@ def gen_email() -> dict:
                        "role": "user",
                        "content": f"The predicted stocks will change price to {predicted_price}. Generate an event set in the year 2000 that caused this in an email format."
                    }
-               ], "temperature": 0.7, "top_p": 0.9, "stream": False, "max_tokens": 180}
+               ], "temperature": 0.7, "top_p": 0.9, "stream": False, "max_tokens": 180, "stop": ["<|im_end|>", "<|im_start|>"],}
 
     response = requests.post(url=llm_url, json=payload1)
     response.raise_for_status()
@@ -96,7 +94,7 @@ def gen_email() -> dict:
                        "role": "user",
                        "content": f"Generate a title for the following email: {email_content}"
                    }
-               ], "temperature": 0.7, "top_p": 0.9, "stream": False, "max_tokens": 180}
+               ], "temperature": 0.7, "top_p": 0.9, "stream": False, "max_tokens": 180, "stop": ["<|im_end|>", "<|im_start|>"],}
 
     response = requests.post(url=llm_url, json=payload2)
     response.raise_for_status()
