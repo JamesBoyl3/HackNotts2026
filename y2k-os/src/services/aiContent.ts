@@ -16,3 +16,26 @@ export async function generateNews(state: GameState, signal?: AbortSignal): Prom
 }
 export const fallbackNews = (state: GameState): GeneratedNews => ({ id: `fallback-news-${state.week}`, week: state.week, headline: state.events.at(-1)?.headline ?? `Markets open for week ${state.week}`, summary: "The Nottingham desk reviews the latest movements.", body: `HCKSOC, CAPONE and TELLUV were reviewed by the investment desk in week ${state.week}. The engine recorded prices independently of this bulletin.`, publishedAt: `Week ${state.week}, 1999`, relatedTickers: ["HCKSOC", "CAPONE", "TELLUV"] });
 export const fallbackMail = (state: GameState): Mail => ({ id: 1000 + state.week, sender: "Nottingham Financial", subject: `Week ${state.week} market bulletin`, time: "09:00", body: fallbackNews(state).body, unread: true, tag: "News" });
+
+export async function fetchApiMail(state: GameState, signal?: AbortSignal): Promise<Mail | null> {
+  try {
+    const response = await fetch("https://hacknotts.jimpip.uk/email", { signal });
+    console.log("email status:", response.status);
+    if (!response.ok) return null;
+    const data = await response.json();
+    console.log("email data:", data);
+    if (typeof data.title !== "string" || typeof data.content !== "string") return null;
+    return {
+      id: 1000 + state.week,
+      sender: "Anonymous Tip",
+      subject: data.title.replace(/^"|"$/g, "").trim(),
+      time: "now",
+      body: data.content.trim(),
+      unread: true,
+      tag: "Research",
+    };
+  } catch (err) {
+    console.error("fetchApiMail failed:", err);
+    return null;
+  }
+}
