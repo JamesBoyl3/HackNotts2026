@@ -11,6 +11,8 @@ from dataclasses import dataclass
 
 llm_url = "http://127.0.0.1:8889/v1/chat/completions"
 
+MAX_TOKENS = 400
+
 @dataclass
 class OrderRequest:
     stock: str
@@ -62,7 +64,7 @@ def gen_email() -> dict:
                        "role": "user",
                        "content": f"The predicted stocks will change price to {predicted_price}. Generate an event set in the year 2000 that caused this in an email format."
                    }
-               ]}
+               ], "max_tokens": MAX_TOKENS}
 
     response = requests.post(url=llm_url, json=payload1)
     response.raise_for_status()
@@ -79,7 +81,7 @@ def gen_email() -> dict:
                        "role": "user",
                        "content": f"Generate a title for the following email: {email_content}"
                    }
-               ]}
+               ], "max_tokens": MAX_TOKENS}
 
     response = requests.post(url=llm_url, json=payload2)
     response.raise_for_status()
