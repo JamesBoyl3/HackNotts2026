@@ -220,3 +220,27 @@ __marimo__/
 .streamlit/secrets.toml
 
 LocalLLM/
+
+# Node / frontend dependencies
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+
+# Vite / bundler output and caches
+.vite/
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Local frontend environment files
+.env.local
+.env.*.local
+
+# Package-manager debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
