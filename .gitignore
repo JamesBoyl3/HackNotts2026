@@ -244,3 +244,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 bun-debug.log*
+
+package-lock.json
+yarn.lock
